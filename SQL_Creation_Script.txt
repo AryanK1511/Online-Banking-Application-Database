@@ -1,0 +1,320 @@
+/*
+========== DBS311 (NCC) Group Assignment 2 ==========
+Group Members:
+1) Aryan Khurana => 145282216
+2) Bhanu Rakshita Paul => 143428217
+3) Shivkumar Virendranath Raval => 168146215
+*/
+
+------------------------
+1. spLoanDetailsSelect
+------------------------
+
+-- Selects all the data from the loandetails table
+CREATE OR REPLACE PROCEDURE spLoandetailsSelect (
+    err_count OUT INTEGER,
+    loan_id IN loandetails.loanid%type,
+    loan_amount OUT loandetails.loanamount%type,
+    loan_date OUT loandetails.loandate%type,
+    maturity_date OUT loandetails.maturitydate%type,
+    annual_interest OUT loandetails.anualinterest%type,
+    account_number OUT loandetails.accountnumber%type,
+    approved_by OUT loandetails.approvedby%type
+) AS
+
+BEGIN
+SELECT loanamount, loandate, maturitydate, anualinterest, accountnumber, approvedby
+INTO loan_amount, loan_date, maturity_date, annual_interest, account_number, approved_by
+FROM loandetails
+WHERE loanid = loan_id;
+
+err_count := sql%rowcount;
+COMMIT;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN err_count := -1;
+    WHEN TOO_MANY_ROWS THEN err_count := -2;
+    WHEN OTHERS THEN err_count := -3;
+
+END spLoandetailsSelect;
+
+------------------------
+2. spLoanDetailsInsert
+------------------------
+
+-- Inserts a row in the loandetails table
+CREATE OR REPLACE PROCEDURE spLoandetailsInsert (
+    err_count OUT INTEGER,
+    loan_id IN loandetails.loanid%type,
+    loan_amount IN loandetails.loanamount%type,
+    loan_date IN loandetails.loandate%type,
+    maturity_date IN loandetails.maturitydate%type,
+    annual_interest IN loandetails.anualinterest%type,
+    account_number IN loandetails.accountnumber%type,
+    approved_by IN loandetails.approvedby%type
+) AS
+
+BEGIN
+INSERT INTO loandetails
+VALUES (loan_id, loan_amount, loan_date, maturity_date, annual_interest, account_number, approved_by);
+
+err_count := sql%rowcount;
+COMMIT;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN err_count := -1;
+    WHEN TOO_MANY_ROWS THEN err_count := -2;
+    WHEN OTHERS THEN err_count := -3;
+
+END spLoandetailsInsert;
+
+------------------------
+3. spLoanDetailsUpdate
+------------------------
+
+-- Updates the loan amount for an id provided as input
+CREATE OR REPLACE PROCEDURE spLoandetailsUpdate (
+    err_count OUT INTEGER,
+    loan_id IN loandetails.loanid%type,
+    loan_amount IN loandetails.loanamount%type
+) AS
+
+BEGIN
+UPDATE loandetails SET  loanamount = loan_amount
+WHERE loanid = loan_id;
+
+err_count := sql%rowcount;
+COMMIT;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN err_count := -1;
+    WHEN TOO_MANY_ROWS THEN err_count := -2;
+    WHEN OTHERS THEN err_count := -3;
+
+END spLoandetailsUpdate;
+
+------------------------
+4. spLoanDetailsDelete
+------------------------
+
+-- Deletes a row from the loan details table
+CREATE OR REPLACE PROCEDURE spLoandetailsDelete (
+    err_count OUT INTEGER,
+    loan_id IN loandetails.loanid%type
+) AS
+
+BEGIN
+DELETE FROM loandetails
+WHERE loanid = loan_id;
+
+err_count := sql%rowcount;
+COMMIT;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN err_count := -1;
+    WHEN TOO_MANY_ROWS THEN err_count := -2;
+    WHEN OTHERS THEN err_count := -3;
+
+END spLoandetailsDelete;
+
+--------------
+5.spLogsSelect
+--------------
+
+create or replace PROCEDURE spLogsSelect(err_code out integer,
+                                               log_id IN INTEGER,
+                                               log_userid out LOGS.USERID%TYPE,
+                                               log_location out LOGS.LOGLOCATION%TYPE,
+                                               log_success out LOGS.LOGSUCCESS%TYPE,
+                                               log_time out LOGS.LOGTIME%TYPE)
+AS
+BEGIN 
+    SELECT USERID,LOGLOCATION,LOGSUCCESS,LOGTIME
+    INTO log_userid,log_location,log_success,log_time
+    from LOGS
+    where LOGID = log_id;
+
+    err_code := sql%rowcount;
+
+    EXCEPTION
+        WHEN NO_DATA_FOUND 
+            THEN err_code := -1; dbms_output.put_line('Data not entered');
+        WHEN OTHERS THEN 
+        err_code:=0; DBMS_OUTPUT.PUT_LINE('INVALID LOG ID');
+END spLogsSelect;
+
+--------------
+6.spLogsInsert
+--------------
+
+create or replace PROCEDURE spLogsInsert(err_code out integer,
+                                               log_id IN LOGS.LOGID%TYPE,
+                                               log_userid IN LOGS.USERID%TYPE,
+                                               log_location IN LOGS.LOGLOCATION%TYPE,
+                                               log_success IN LOGS.LOGSUCCESS%TYPE,
+                                               log_time IN LOGS.LOGTIME%TYPE)
+AS
+BEGIN 
+    INSERT INTO LOGS (LOGID,USERID,LOGLOCATION,LOGSUCCESS,LOGTIME)
+    VALUES(log_id,log_userid,log_location,log_success,log_time);
+
+    err_code := sql%rowcount;
+
+    EXCEPTION
+        WHEN NO_DATA_FOUND 
+            THEN err_code := -1; dbms_output.put_line('Log ID does not exist');
+        WHEN OTHERS THEN 
+        err_code:=0; DBMS_OUTPUT.PUT_LINE('LOG ID ALREADY EXIST/CANNOT INSERT');
+END spLogsInsert;
+
+--------------
+7.spLogsDelete
+--------------
+
+create or replace PROCEDURE spLogsDELETE(err_code out integer,
+                                               log_id IN LOGS.LOGID%TYPE,
+                                               log_userid IN LOGS.USERID%TYPE,
+                                               log_location IN LOGS.LOGLOCATION%TYPE,
+                                               log_success IN LOGS.LOGSUCCESS%TYPE,
+                                               log_time IN LOGS.LOGTIME%TYPE)
+AS
+BEGIN 
+    DELETE FROM LOGS WHERE LOGID = log_id 
+                     AND USERID=log_userid
+                     AND LOGLOCATION=log_location
+                     AND LOGSUCCESS=log_success
+                     AND LOGTIME=log_time;
+    err_code := sql%rowcount;
+    COMMIT;
+
+    EXCEPTION
+        WHEN NO_DATA_FOUND 
+            THEN err_code := -1; dbms_output.put_line('Log ID does not exist');
+        WHEN OTHERS THEN 
+        err_code:=0; DBMS_OUTPUT.PUT_LINE('LOG ID ALREADY EXIST/CANNOT INSERT');
+END spLogsDELETE;
+
+--------------
+8.spLogsUpdate
+--------------
+
+create or replace PROCEDURE spLogsUPDATE(err_code out integer,
+                                               log_id IN LOGS.LOGID%TYPE,
+                                               log_userid IN LOGS.USERID%TYPE,
+                                               log_location IN LOGS.LOGLOCATION%TYPE,
+                                               log_success IN LOGS.LOGSUCCESS%TYPE,
+                                               log_time IN LOGS.LOGTIME%TYPE)
+AS
+BEGIN 
+    UPDATE LOGS SET USERID=log_userid,LOGLOCATION=log_location,LOGSUCCESS=log_success,LOGTIME=log_time
+    WHERE LOGID = log_id;
+    err_code := sql%rowcount;
+    COMMIT;
+
+    EXCEPTION
+        WHEN NO_DATA_FOUND 
+            THEN err_code := -1; dbms_output.put_line('Data not entered');
+        WHEN OTHERS THEN 
+        err_code:=0; DBMS_OUTPUT.PUT_LINE('LOG ID ALREADY EXIST/CANNOT INSERT');
+END spLogsUPDATE;
+
+--------------
+9.SPcustomersINSERT
+--------------
+
+create or replace PROCEDURE SPcustomersINSERT(
+err_code OUT INTEGER,
+customer_id IN customers.custid%type,
+customer_name IN customers.custname%type,
+customer_email IN customers.custemail%type,
+customer_pwd IN customers.custpwd%type,
+customer_address IN customers.custaddress%type,
+customer_advisor IN customers.custadvisor%type,
+customer_phone IN customers.custphone%type) AS
+
+BEGIN
+    INSERT INTO customers
+    VALUES (customer_id, customer_name, customer_email, customer_pwd, customer_address, customer_advisor, customer_phone);
+
+    err_code := sql%rowcount;
+    COMMIT;
+
+    EXCEPTION
+        WHEN OTHERS
+            THEN err_code := -1;
+END;
+
+
+--------------
+10.SPcustomersUPDATE
+--------------
+
+create or replace PROCEDURE SPcustomersUPDATE(
+err_code OUT INTEGER,
+customer_id IN customers.custid%type,
+address IN customers.custaddress%type) AS 
+BEGIN
+    UPDATE CUSTOMERS SET custaddress=address 
+    WHERE custid=customer_id;
+    
+    err_code := SQL%ROWCOUNT;
+    COMMIT;
+
+    EXCEPTION
+        WHEN NO_DATA_FOUND
+            THEN err_code:=-2;
+        WHEN OTHERS
+            THEN err_code:=-1;
+END;
+
+--------------
+11.SPcustomersDELETE
+--------------
+
+create or replace PROCEDURE SPcustomersDELETE(
+err_code OUT INTEGER,
+customer_id IN NUMBER) AS
+
+BEGIN
+    DELETE FROM customers 
+    WHERE custid=customer_id;
+
+    err_code := SQL%ROWCOUNT;
+    COMMIT;
+      
+    EXCEPTION
+        WHEN OTHERS
+            THEN err_code := -1;
+END;
+
+--------------
+12.SPcustomersSELECT
+--------------
+
+create or replace PROCEDURE SPcustomersSELECT(
+err_code OUT INTEGER,
+cid IN customers.custid%type,
+customer_id OUT customers.custid%type,
+customer_name OUT customers.custname%type,
+customer_phone OUT customers.custphone%type,
+customer_email OUT customers.custemail%type) AS
+
+BEGIN
+    SELECT custid, custname, custphone, custemail
+    INTO customer_id, customer_name, customer_phone, customer_email
+    FROM CUSTOMERS
+    WHERE custid=cid;
+    
+    err_code := SQL%ROWCOUNT;
+
+    EXCEPTION
+         WHEN TOO_MANY_ROWS
+            THEN err_code := -2;
+            --THEN dbms_output.put_line('Multiple customers returned');
+        WHEN NO_DATA_FOUND
+            THEN err_code := -3;
+            --THEN dbms_output.put_line('No customer has the given advisor');
+        WHEN OTHERS
+            THEN err_code := -1;
+            --THEN dbms_output.put_line('Error in fetching rows');
+END;
